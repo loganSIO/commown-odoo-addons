@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<odoo>
+
+  <record id="issue-description-fp3-screen" model="ir.ui.view">
+    <field name="name">self-troubleshoot-issue-description-generic-issue</field>
+    <field name="type">qweb</field>
+    <field name="key">commown_self_troubleshooting.issue-description-generic-issue</field>
+    <field name="arch" type="xml">
+      <t t-name="self-troubleshoot-issue-description-generic-issue">
+Bonjour,
+
+<t t-esc="more_info" />
+      </t>
+    </field>
+  </record>
+</odoo>

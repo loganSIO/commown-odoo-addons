@@ -1,0 +1,242 @@
+<?xml version="1.0"?>
+<odoo>
+
+  <record id="generic-issue" model="ir.ui.view">
+    <field name="name">Self-troubleshoot a generic issue</field>
+    <field name="type">qweb</field>
+    <field name="key">website.self-troubleshoot-generic-issue</field>
+    <field name="arch" type="xml">
+
+      <t t-name="website.self-troubleshoot-generic-issue">
+        <t t-call="commown-self-troubleshoot.web-layout">
+          <t t-set="title">Commown - Demande d'assistance</t>
+          <t t-set="head">
+            <script type="text/javascript">
+              $(document).ready(function() {
+
+                const wizard = setUpWizard($('#smartwizard'));
+
+                $('#generic_request').change(function () {
+                  wizard.toggleStep(2, this.value==='lost');
+                  wizard.toggleStep(3, this.value==='rob');
+                  wizard.toggleStep(4, this.value==='broke');
+                  wizard.toggleStep(5, this.value==='contract');
+                  wizard.toggleStep(6, this.value==='support');
+                  let $option = $('#device_contract option').filter(function(){return this.selected});
+                  $('#commitment-text').toggle($option.data().inCommitment === 1);
+                });
+
+                let $option = $('#device_contract option').filter(function(){return this.selected});
+                $('#commitment-text').toggle($option.data().inCommitment === 1);
+
+              });
+            </script>
+
+          </t>
+
+          <!-- Variables à modifier ici -->
+          <t t-set="contract_name_like"></t>
+          <t t-set="issue_title">Demande d'assistance</t>
+          <t t-set="issue_description_template">issue-description-generic-issue</t>
+          <!-- Fin des variables à modifier -->
+
+          <div class="container">
+            <h1>Je souhaite faire une demande d'assistance générique</h1>
+            <br />
+            <form action="/self-troubleshoot/" method="post" accept-charset="utf-8" id="myForm" role="form">
+
+              <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()" />
+              <input type="hidden" name="self-troubleshoot-type" id="self-troubleshoot-type" t-att-value="issue_title" />
+              <input type="hidden" name="issue-description-template" id="issue-description-template" t-att-value="issue_description_template" />
+
+              <div id="smartwizard">
+                <ul>
+                  <li>
+                    <a href="#step-0">
+                      Contexte
+                      <br />
+                      <small>Appareil concerné</small>
+                    </a>
+                  </li>
+                  <li disabled="disabled">
+                    <a href="#step-1">
+                      Étape 1
+                      <br />
+                      <small>Votre demande concerne</small>
+                    </a>
+                  </li>
+                  <li disabled="disabled">
+                    <a href="#step-2">
+                      Étape 2
+                      <br />
+                      <small>Perte</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#step-3">
+                      Étape 3
+                      <br />
+                      <small>Vol</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#step-4">
+                      Étape 4
+                      <br />
+                      <small>Casse</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#step-5">
+                      Étape 5
+                      <br />
+                      <small>Résiliation</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#step-6">
+                      Étape 6
+                      <br />
+                      <small>Détail de ma demande</small>
+                    </a>
+                  </li>
+                </ul>
+
+                <div>
+                  <t t-call="commown_self_troubleshooting.step-contract-choice" />
+
+                  <div id="step-1">
+                    <div class="clearfix">
+                      <t t-set="contracts" t-value="env['account.analytic.account'].sudo().search([('partner_id', '=', env.user.partner_id.id), ('contract_template_id.name', 'like', contract_name_like), ('date_end', '=', False)])" />
+                      <h2>Votre demande concerne</h2>
+                      <div id="form-step-1" role="form" data-toggle="validator">
+                        <div class="form-group">
+                          <br />
+                          <p>Pour vous aider au mieux, nous avons besoin de savoir sur quel sujet porte votre demande.</p>
+                          <p>Pour ce faire, nous vous invitons à sélectionner ci-dessous, le type de votre demande puis de cliquer sur "suivant".</p>
+                          <br />
+                          <label for="generic_request">Préciser votre demande</label>
+                          <select class="form-control" required="required" id="generic_request" data-required-error="Veuillez sélectionner le type de votre demande">
+                            <option disabled="disabled" selected="1" value="">-- Choisir une réponse --</option>
+                            <option value="support">J'ai besoin d'une assistance technique</option>
+                            <option value="lost">J'ai perdu mon appareil</option>
+                            <option value="rob">On m'a volé mon appareil</option>
+                            <option value="broke">Mon appareil est cassé</option>
+                            <option value="contract">J'envisage de résilier mon contrat</option>
+                          </select>
+                          <div class="help-block with-errors" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="step-2">
+                    <div class="clearfix">
+                      <h2>J'ai perdu mon appareil et/ou un accessoire</h2>
+                      <br />
+                      <p>Dans le champs de texte ci-dessous, vous pouvez nous transmettre des informations supplémentaires.</p>
+                      <p>Dès la réception de cette demande, un membre de l'équipe de gestion vous recontactera par mail.
+                  Vérifiez dans vos courriels indésirables si vous n'avez pas reçu de réponse sous 48h ouvrées</p>
+                      <br />
+                      <div id="form-step-2" role="form" data-toggle="validator">
+                        <div class="form-group">
+                          <textarea id="more_info" class="form-control" name="more_info" rows="5" cols="33" required="required"></textarea>
+                          <input type="hidden" name="stage_id" t-att-value="env.ref('commown_self_troubleshooting.stage_received').id" />
+                          <br />
+                          <input type="hidden" name="tags" id="tags" value="Perte" />
+                          <button type="submit" class="btn btn-primary" name="action" value="generic-issue">Envoyer les informations</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="step-3">
+                    <div class="clearfix">
+                      <h2>Je me suis fait voler mon appareil</h2>
+                      <br />
+                      <p>Dans le champs de texte ci-dessous, vous pouvez nous transmettre des informations supplémentaires.</p>
+                      <p>Dès la réception de cette demande, un membre de l'équipe de gestion vous recontactera par mail.
+                  Vérifiez dans vos courriels indésirables si vous n'avez pas reçu de réponse sous 48h ouvrées</p>
+                      <br />
+                      <div id="form-step-3" role="form" data-toggle="validator">
+                        <div class="form-group">
+                          <textarea id="more_info" class="form-control" name="more_info" rows="5" cols="33" required="required"></textarea>
+                          <input type="hidden" name="stage_id" t-att-value="env.ref('commown_self_troubleshooting.stage_received').id" />
+                          <br />
+                          <input type="hidden" name="tags" id="tags" value="Vol" />
+                          <button type="submit" class="btn btn-primary" name="action" value="generic-issue">Envoyer les informations</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="step-4">
+                    <div class="clearfix">
+                      <h2>Mon appareil est cassé</h2>
+                      <br />
+                      <p>Dans le champs de texte ci-dessous, vous pouvez nous transmettre des informations supplémentaires.</p>
+                      <p>Dès la réception de cette demande, un membre de l'équipe de gestion vous recontactera par mail.
+                  Vérifiez dans vos courriels indésirables si vous n'avez pas reçu de réponse sous 48h ouvrées</p>
+                      <br />
+                      <div id="form-step-4" role="form" data-toggle="validator">
+                        <div class="form-group">
+                          <textarea id="more_info" class="form-control" name="more_info" rows="5" cols="33" required="required"></textarea>
+                          <input type="hidden" name="stage_id" t-att-value="env.ref('commown_self_troubleshooting.stage_received').id" />
+                          <br />
+                          <input type="hidden" name="tags" id="tags" value="Casse" />
+                          <button type="submit" class="btn btn-primary" name="action" value="generic-issue">Envoyer les informations</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="step-5">
+                    <div class="clearfix">
+                      <h2>J'envisage de résilier mon contrat</h2>
+                      <br />
+                      <p id="commitment-text">Contrat en cours</p>
+                      <br />
+                      <div id="form-step-5" role="form" data-toggle="validator">
+                        <div class="form-group">
+                          <textarea id="more_info" class="form-control" name="more_info" rows="5" cols="33" required="required"></textarea>
+                          <input type="hidden" name="stage_id" t-att-value="env.ref('commown_self_troubleshooting.stage_received').id" />
+                          <br />
+                          <input type="hidden" name="tags" id="tags" value="Résiliation" />
+                          <button type="submit" class="btn btn-primary" name="action" value="generic-issue">Envoyer les informations</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="step-6">
+                    <div class="clearfix">
+                      <h2>Détail de ma demande</h2>
+                      <br />
+                      <p>Dans le champs de texte ci-dessous, vous pouvez nous transmettre des informations supplémentaires.</p>
+                      <p>Dès la réception de cette demande, un membre de l'équipe de gestion vous recontactera par mail.
+                  Vérifiez dans vos courriels indésirables si vous n'avez pas reçu de réponse sous 48h ouvrées</p>
+                      <br />
+                      <div id="form-step-6" role="form" data-toggle="validator">
+                        <div class="form-group">
+                          <textarea id="more_info" class="form-control" name="more_info" rows="5" cols="33" required="required"></textarea>
+                          <input type="hidden" name="stage_id" t-att-value="env.ref('commown_self_troubleshooting.stage_received').id" />
+                          <br />
+                          <button type="submit" class="btn btn-primary" name="action" value="generic-issue">Envoyer les informations</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            </form>
+          </div>
+
+        </t>
+      </t>
+
+    </field>
+  </record>
+
+</odoo>
