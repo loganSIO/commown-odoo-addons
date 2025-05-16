@@ -24,7 +24,13 @@ class DeviceAssignmentHistory(models.Model):
     )
 
     device_location = fields.Selection(
-        related="assignment_id.device_location",
+        [
+            ("at_customer", "At Customer"),
+            ("at_commown", "At Commown"),
+        ],
+        string="Device Location",
+        required=True,
+        default="at_customer",
     )
 
     def name_get(self):

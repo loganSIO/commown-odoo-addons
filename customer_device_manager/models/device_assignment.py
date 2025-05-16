@@ -90,6 +90,7 @@ class DeviceAssignment(models.Model):
                     "assignment_id": rec.id,
                     "date": fields.Datetime.now(),
                     "partner_id": rec.partner_id.id,
+                    "device_location": rec.device_location,
                 }
             )
 
