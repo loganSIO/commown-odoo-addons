@@ -11,13 +11,34 @@ class StockMove(models.Model):
         partner = contract.partner_id.commercial_partner_id
         if partner.is_company:
             for lot in lots:
-                self.env["customer_device_manager.device_assignment"].create(
-                    {
-                        "device_id": lot.id,
-                        "partner_id": partner.id,
-                        "assignment_date": fields.Datetime.now(),
-                    }
+                latest_assignment = self.env[
+                    "customer_device_manager.device_assignment"
+                ].search(
+                    [
+                        ("device_id", "=", lot.id),
+                    ],
+                    limit=1,
+                    order="assignment_date desc",
                 )
+
+                if (
+                    latest_assignment
+                    and latest_assignment.partner_id.commercial_partner_id == partner
+                ):
+                    latest_assignment.update(
+                        {
+                            "assignment_date": fields.Datetime.now(),
+                            "device_location": "at_customer",
+                        }
+                    )
+                else:
+                    self.env["customer_device_manager.device_assignment"].create(
+                        {
+                            "device_id": lot.id,
+                            "partner_id": partner.id,
+                            "assignment_date": fields.Datetime.now(),
+                        }
+                    )
 
     def _unset_lot_contract(self, lots, contract, location_dest, **kwargs):
         "Archive Device Assignment on device return validation"
