@@ -18,25 +18,30 @@ class StockMove(models.Model):
                         ("device_id", "=", lot.id),
                     ],
                     limit=1,
-                    order="assignment_date desc",
                 )
 
                 if (
                     latest_assignment
                     and latest_assignment.partner_id.commercial_partner_id == partner
                 ):
-                    latest_assignment.update(
+                    self.env[
+                        "customer_device_manager.device_assignment_history"
+                    ].sudo().create(
                         {
-                            "assignment_date": fields.Datetime.now(),
+                            "assignment_id": latest_assignment.id,
+                            "date": fields.Datetime.now(),
+                            "partner_id": latest_assignment.partner_id.id,
                             "device_location": "at_customer",
                         }
                     )
+
                 else:
                     self.env["customer_device_manager.device_assignment"].create(
                         {
                             "device_id": lot.id,
                             "partner_id": partner.id,
                             "assignment_date": fields.Datetime.now(),
+                            "device_location": "at_customer",
                         }
                     )
 
@@ -45,11 +50,24 @@ class StockMove(models.Model):
         super()._unset_lot_contract(lots, contract, location_dest, **kwargs)
 
         partner = contract.partner_id.commercial_partner_id
-        assignments = self.env["customer_device_manager.device_assignment"].search(
-            [
-                ("device_id", "in", lots.ids),
-                ("partner_id", "child_of", partner.id),
-                ("device_location", "=", "at_customer"),
-            ]
-        )
-        assignments.update({"device_location": "at_commown"})
+        for lot in lots:
+            assignment = self.env["customer_device_manager.device_assignment"].search(
+                [
+                    ("device_id", "=", lot.id),
+                    ("partner_id", "child_of", partner.id),
+                    ("device_location", "=", "at_customer"),
+                ],
+                limit=1,
+            )
+
+            if assignment:
+                self.env[
+                    "customer_device_manager.device_assignment_history"
+                ].sudo().create(
+                    {
+                        "assignment_id": assignment.id,
+                        "date": fields.Datetime.now(),
+                        "partner_id": assignment.partner_id.id,
+                        "device_location": "at_commown",
+                    }
+                )

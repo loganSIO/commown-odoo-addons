@@ -81,16 +81,17 @@
               <field name="device_name"/>
               <field name="contract_name"/>
               <field name="partner_id" context="{'form_view_ref': 'customer_team_manager.view_customer_user_form'}"/>
+              <field name="device_location" readonly="1"/>
             </group>
             <group name="history">
-              <field name="assignment_notes" style="word-break: break-word;"/>
               <field name="history_ids">
                 <tree>
                   <field name="date"/>
-                  <field name="partner_id"/>
-                  <field name="device_location"/>
+                  <field name="partner_id" string="Partner at date"/>
+                  <field name="device_location" string="Device location at date"/>
                 </tree>
               </field>
+              <field name="assignment_notes" style="word-break: break-word;"/>
             </group>
           </group>
         </sheet>

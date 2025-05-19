@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class DeviceAssignment(models.Model):
@@ -36,6 +36,8 @@ class DeviceAssignment(models.Model):
         string="Assignment Date",
         required=True,
         default=fields.Datetime.now,
+        compute="_compute_history_change_impact",
+        store=True,
     )
 
     assignment_notes = fields.Text(
@@ -49,6 +51,8 @@ class DeviceAssignment(models.Model):
         ],
         string="Device Location",
         default="at_customer",
+        compute="_compute_history_change_impact",
+        store=True,
     )
 
     history_ids = fields.One2many(
@@ -93,6 +97,25 @@ class DeviceAssignment(models.Model):
                     "device_location": rec.device_location,
                 }
             )
+
+    @api.depends("history_ids")
+    def _compute_history_change_impact(self):
+        for rec in self:
+            last_history = rec.history_ids and rec.history_ids[0]
+            if last_history:
+                rec.update(
+                    {
+                        "device_location": last_history.device_location,
+                        "assignment_date": last_history.date,
+                    }
+                )
+            else:
+                rec.update(
+                    {
+                        "device_location": "at_customer",
+                        "assignment_date": fields.Datetime.now(),
+                    }
+                )
 
     def name_get(self):
         return [(rec.id, rec.device_id.name) for rec in self]

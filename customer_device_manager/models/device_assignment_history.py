@@ -5,7 +5,7 @@ class DeviceAssignmentHistory(models.Model):
     _name = "customer_device_manager.device_assignment_history"
     _description = "Store the partner an assignment had at one given date"
 
-    _order = "assignment_id, date desc"
+    _order = "assignment_id, date desc, id desc"
 
     assignment_id = fields.Many2one(
         "customer_device_manager.device_assignment",
